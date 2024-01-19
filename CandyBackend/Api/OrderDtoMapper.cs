@@ -8,7 +8,8 @@ public class OrderDtoMapper : Profile
 {
     public OrderDtoMapper()
     {
-        CreateMap<Order, OrderOut>();
+        CreateMap<Order, OrderOut>()
+            .ForMember(o => o.OrderDate, opt => opt.MapFrom(o => o.CreatedAt));
         CreateMap<OrderItem, OrderItemDto>();
     }
 }

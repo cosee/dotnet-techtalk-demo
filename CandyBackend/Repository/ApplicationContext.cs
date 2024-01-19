@@ -12,11 +12,14 @@ public class ApplicationContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<OrderEntity>()
-            .HasMany<OrderItemEntity>(o => o.OrderItems)
-            .WithOne()
-            .HasForeignKey(oi => oi.OrderId)
-            .IsRequired();
+        modelBuilder.Entity<OrderEntity>(entity =>
+        {
+            entity.Property(e => e.CreatedAt).HasColumnType("timestamp without time zone");
+            entity.HasMany<OrderItemEntity>(o => o.OrderItems)
+                .WithOne()
+                .HasForeignKey(oi => oi.OrderId)
+                .IsRequired();
+        });
     }
 
     public required DbSet<CandyEntity> Candy { get; init; }

@@ -1,61 +1,45 @@
-using CandyBackend.Api.Dto;
 using CandyBackend.Core;
 using CandyBackend.Repository.Candies;
 using CandyBackend.Repository.Orders;
+using FluentAssertions;
 using Moq;
-using NUnit.Framework;
+using Xunit;
+using static CandyBackend.Test.Core.ModelHelper;
 
 namespace CandyBackend.Test.Core;
 
 public class OrderServiceTest
 {
-    private OrderService _orderService = null!;
-    private Mock<IOrderDao> _orderDaoMock = null!;
-    private Mock<ICandyDao> _candyDaoMock = null!;
+    private readonly OrderService _orderService;
+    private readonly Mock<IOrderDao> _orderDaoMock;
+    private readonly Mock<ICandyDao> _candyDaoMock;
 
-    [SetUp]
-    public void SetUp()
+    public OrderServiceTest()
     {
         _orderDaoMock = new Mock<IOrderDao>();
         _candyDaoMock = new Mock<ICandyDao>();
         _orderService = new OrderService(_orderDaoMock.Object, _candyDaoMock.Object);
     }
-    
-    [Test]
+
+    [Fact]
     public void CalculateOrderTotal()
     {
-        var mars = new Candy
-        {
-            Id = 0,
-            Name = "Mars",
-            Price = 90
-        };
-        var snickers = new Candy
-        {
-            Id = 1,
-            Name = "Snickers",
-            Price = 120
-        };
-        _candyDaoMock.Setup(dao => dao.FindCandiesById(new List<long> { 0, 1 }))
-            .Returns(new List<Candy> { mars, snickers });
+        var mars = BuildCandy(0, "Mars", 90);
+        var snickers = BuildCandy(1, "Snickers", 120);
+        var candyIds = new List<long> { mars.Id, snickers.Id };
+        _candyDaoMock.Setup(dao => dao.FindCandiesById(candyIds)).Returns([mars, snickers]);
 
         Order? savedOrder = null;
-        _orderDaoMock.Setup(dao => dao.Save(It.IsAny<Order>()))
-            .Callback<Order>(order => savedOrder = order);
-        
-        var orderIn = new OrderIn
-        {
-            FirstName = "Test",
-            LastName = "Test",
-            CandyIds = new List<long> { 0, 1 }
-        };
+        _orderDaoMock.Setup(dao => dao.Save(It.IsAny<Order>())).Callback<Order>(order => savedOrder = order);
+
+        var orderIn = BuildOrderIn("Maxi Musterperson", "test@cosee.biz", candyIds);
 
         _orderService.Save(orderIn);
-        
+
         _orderDaoMock.Verify(dao => dao.Save(It.IsAny<Order>()), Times.Once);
-        Assert.IsNotNull(savedOrder);
-        Assert.That(savedOrder.FirstName, Is.EqualTo("Test"));
-        Assert.That(savedOrder.LastName, Is.EqualTo("Test"));
-        Assert.That(savedOrder.OrderTotal, Is.EqualTo(210));
+        savedOrder.Should().NotBeNull()
+            .And.Match<Order>(order => order.Name == "Maxi Musterperson")
+            .And.Match<Order>(order => order.Mail == "test@cosee.biz")
+            .And.Match<Order>(order => order.OrderTotal == 210);
     }
 }

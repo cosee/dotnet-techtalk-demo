@@ -2,16 +2,16 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CandyBackend.Api.Dto;
 
-public class OrderIn
+public record OrderIn
 {
     [Required]
     [MinLength(3)]
-    public required string FirstName { get; init; }
-    
+    public required string Name { get; init; }
+
     [Required]
-    [MinLength(3)]
-    public required string LastName { get; init; }
-    
+    [EmailAddress]
+    public required string Mail { get; init; }
+
     [Required]
     [MinLength(1)]
     public required List<long> CandyIds { get; init; }

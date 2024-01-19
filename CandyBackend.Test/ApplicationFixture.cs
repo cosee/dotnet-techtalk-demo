@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Mvc.Testing;
-using NUnit.Framework;
+// ReSharper disable ClassNeverInstantiated.Global
 
-namespace CandyBackend.Test.Api;
+namespace CandyBackend.Test;
 
-[FixtureLifeCycle(LifeCycle.SingleInstance)]
-public abstract class AbstractIntegrationTest
+public class ApplicationFixture
 {
-    protected readonly WebApplicationFactory<Program> factory;
+    public readonly WebApplicationFactory<Program> factory;
 
-    protected AbstractIntegrationTest()
+    public ApplicationFixture()
     {
         Environment.SetEnvironmentVariable("ASPNETCORE_ENVIRONMENT", "Development");
         if (Environment.GetEnvironmentVariable("ConnectionStrings__CandyDatabase") is null)
         {
             Environment.SetEnvironmentVariable("ConnectionStrings__CandyDatabase",
-                "Host=127.0.0.1:5432;Database=postgres;Username=postgres;Password=postgres");
+                "Host=127.0.0.1:5432;Database=test;Username=postgres;Password=postgres");
         }
 
         factory = new WebApplicationFactory<Program>();

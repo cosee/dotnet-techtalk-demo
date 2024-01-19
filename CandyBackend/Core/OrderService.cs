@@ -20,10 +20,11 @@ public class OrderService : IOrderService
         var orderItems = _mapToOrderItems(orderIn.CandyIds);
         var order = new Order
         {
-            FirstName = orderIn.FirstName,
-            LastName = orderIn.LastName,
+            Name = orderIn.Name,
+            Mail = orderIn.Mail,
             Items = orderItems,
-            OrderTotal = orderItems.Sum(item => item.Price)
+            OrderTotal = orderItems.Sum(item => item.Price),
+            CreatedAt = DateTime.Now,
         };
         return _orderDao.Save(order);
     }

@@ -1,8 +1,8 @@
 namespace CandyBackend.Api.Dto;
 
-public class CandyOut
+public record CandyOut
 {
-    public long Id { get; init; }
+    public required long Id { get; init; }
 
     public required string Name { get; init; }
     

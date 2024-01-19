@@ -1,6 +1,6 @@
-FROM mcr.microsoft.com/dotnet/aspnet:7.0
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
 
-COPY CandyBackend/bin/Release/net7.0/publish/ App/
+COPY CandyBackend/bin/Release/net8.0/publish/ App/
 
 WORKDIR /App
 ENTRYPOINT ["dotnet", "CandyBackend.dll"]

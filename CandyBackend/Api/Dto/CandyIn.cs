@@ -1,11 +1,13 @@
 using System.ComponentModel.DataAnnotations;
+using Swashbuckle.AspNetCore.Annotations;
 
 namespace CandyBackend.Api.Dto;
 
-public class CandyIn
+public record CandyIn
 {
     [Required]
     [StringLength(50, MinimumLength = 3)]
+    [SwaggerParameter(Description = "The name of the candy")]
     public required string Name { get; init; }
     
     [Required]

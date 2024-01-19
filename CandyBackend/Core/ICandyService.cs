@@ -2,7 +2,7 @@ namespace CandyBackend.Core;
 
 public interface ICandyService
 {
-    List<Candy> GetCandies();
+    List<Candy> GetCandies(int limit, int offset, CandySortBy sortBy, SortDir sortDir);
 
     Candy GetCandy(long candyId);
 

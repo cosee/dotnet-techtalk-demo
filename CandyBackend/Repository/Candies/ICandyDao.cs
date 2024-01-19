@@ -10,7 +10,7 @@ public interface ICandyDao
 
     Candy GetCandy(long candyId);
 
-    List<Candy> GetCandies();
+    List<Candy> GetCandies(int limit, int offset, CandySortBy sortBy, SortDir sortDir);
 
     List<Candy> FindCandiesById(ICollection<long> candyIds);
 }

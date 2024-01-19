@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace CandyBackend.Repository.Candies;
 
 [Table("candy")]
-public class CandyEntity
+public class CandyEntity : ISortable
 {
     public long Id { get; init; }
 

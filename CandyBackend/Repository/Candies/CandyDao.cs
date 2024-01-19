@@ -13,7 +13,7 @@ public class CandyDao : ICandyDao
         _context = context;
         _mapper = mapper;
     }
-    
+
     public Candy Save(Candy candy)
     {
         var candyEntity = _mapper.Map<CandyEntity>(candy);
@@ -41,9 +41,12 @@ public class CandyDao : ICandyDao
         return _mapper.Map<Candy>(_context.Candy.First(c => c.Id == candyId));
     }
 
-    public List<Candy> GetCandies()
+    public List<Candy> GetCandies(int limit, int offset, CandySortBy sortBy, SortDir sortDir)
     {
-        return _mapper.Map<List<Candy>>(_context.Candy);
+        var candies = _context.Candy
+            .ApplySorting(sortBy, sortDir)
+            .ApplyPagination(limit, offset);
+        return _mapper.Map<List<Candy>>(candies);
     }
 
     public List<Candy> FindCandiesById(ICollection<long> candyIds)

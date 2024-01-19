@@ -17,9 +17,14 @@ public class OrderDao : IOrderDao
 
     public Order Save(Order order)
     {
+        using var transaction = _context.Database.BeginTransaction();
+
         var orderEntity = _mapper.Map<OrderEntity>(order);
         _context.Order.Add(orderEntity);
         _context.SaveChanges();
+
+        transaction.Commit();
+
         return _mapper.Map<Order>(orderEntity);
     }
 

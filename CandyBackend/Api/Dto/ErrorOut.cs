@@ -1,6 +1,6 @@
 namespace CandyBackend.Api.Dto;
 
-public class ErrorOut
+public record ErrorOut
 {
     public required string Message { get; init; }
 }

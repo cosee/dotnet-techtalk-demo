@@ -3,9 +3,9 @@ using AutoMapper;
 
 namespace CandyBackend;
 
-public static class AutomapperConfiguration
+public static class AutoMapperConfiguration
 {
-    public static void Configure(IServiceCollection builderServices)
+    public static void ConfigureAutoMapper(this IServiceCollection builderServices)
     {
         Validate();
         

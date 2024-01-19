@@ -23,44 +23,26 @@ public class ExceptionMiddleware
         }
         catch (BadRequestException ex)
         {
-            await HandleBadRequestExceptionAsync(httpContext, ex);
+            await WriteResponse(httpContext, HttpStatusCode.BadRequest, ex.Message);
         }
         catch (EntityNotFoundException ex)
         {
             _logger.LogInformation("Not found: {}", ex.Message);
-            await HandleEntityNotFoundExceptionAsync(httpContext, ex);
+            await WriteResponse(httpContext, HttpStatusCode.NotFound, ex.Message);
         }
         catch (Exception ex)
         {
-            _logger.LogError("Something went wrong: {}", ex);
-            await HandleExceptionAsync(httpContext);
+            _logger.LogError(ex, "Something went wrong:");
+            await WriteResponse(httpContext, HttpStatusCode.InternalServerError, "Internal Server Error.");
         }
     }
 
-    private async Task HandleExceptionAsync(HttpContext context)
+    private async Task WriteResponse(HttpContext context, HttpStatusCode statusCode, string message)
     {
-        context.Response.StatusCode = (int)HttpStatusCode.InternalServerError;
+        context.Response.StatusCode = (int)statusCode;
         await context.Response.WriteAsJsonAsync(new ErrorOut
         {
-            Message = "Internal Server Error.",
-        });
-    }
-
-    private async Task HandleEntityNotFoundExceptionAsync(HttpContext context, EntityNotFoundException exception)
-    {
-        context.Response.StatusCode = (int)HttpStatusCode.NotFound;
-        await context.Response.WriteAsJsonAsync(new ErrorOut
-        {
-            Message = exception.Message
-        });
-    }
-
-    private async Task HandleBadRequestExceptionAsync(HttpContext context, BadRequestException exception)
-    {
-        context.Response.StatusCode = (int)HttpStatusCode.BadRequest;
-        await context.Response.WriteAsJsonAsync(new ErrorOut
-        {
-            Message = exception.Message,
+            Message = message,
         });
     }
 }

@@ -1,10 +1,10 @@
 namespace CandyBackend.Api.Dto;
 
-public class OrderItemDto
+public record OrderItemDto
 {
-    public long Position { get; set; }
+    public required long Position { get; init; }
 
-    public required string Description { get; set; }
+    public required string Description { get; init; }
 
-    public long Price { get; set; }
+    public required long Price { get; init; }
 }

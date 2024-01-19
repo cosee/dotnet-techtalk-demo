@@ -10,6 +10,6 @@ public class CandyDtoMapper : Profile
     {
         CreateMap<Candy, CandyOut>();
         CreateMap<CandyIn, Candy>()
-            .ForMember(x => x.Id, opt => opt.Ignore());
+            .ForMember(c => c.Id, opt => opt.Ignore());
     }
 }

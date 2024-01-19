@@ -8,21 +8,45 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - '8000:80'
+      - '8080:8080'
     environment:
-      ConnectionStrings__CandyDatabase: Host=postgres:5432;Database=postgres;Username=postgres;Password=postgres 
+      ConnectionStrings__CandyDatabase: Host=postgres:5432;Database=local;Username=postgres;Password=postgres
     depends_on:
       - postgres
 
+  prometheus:
+    profiles:
+      - all
+    image: prom/prometheus
+    restart: on-failure
+    volumes:
+      - .prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus-data:/prometheus
+    ports:
+      - '9090:9090'
+
+  grafana:
+    profiles:
+      - all
+    image: grafana/grafana-oss
+    restart: on-failure
+    volumes:
+      - .grafana:/etc/grafana/provisioning
+      - grafana-data:/var/lib/grafana
+    ports:
+      - '3000:3000'
+
   postgres:
-    image: postgres:15
+    image: postgres:16
     restart: on-failure
     command: postgres -c 'max_connections=200'
     volumes:
       - postgres-candy-data:/var/lib/postgresql/data/
+      - ./.docker:/docker-entrypoint-initdb.d
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      POSTGRES_MULTIPLE_DATABASES: test,local
       TZ: UTC
       PGTZ: UTC
     ports:
@@ -30,3 +54,5 @@ services:
 
 volumes:
   postgres-candy-data:
+  prometheus-data:
+  grafana-data:

@@ -1,13 +1,15 @@
 namespace CandyBackend.Api.Dto;
 
-public class OrderOut
+public record OrderOut
 {
-    public long Id { get; init; }
+    public required long Id { get; init; }
 
-    public required string FirstName { get; set; }
-    public required string LastName { get; set; }
+    public required string Name { get; init; }
+    public required string Mail { get; init; }
 
-    public long OrderTotal { get; set; }
+    public required DateTime OrderDate { get; init; }
 
-    public required List<OrderItemDto> Items { get; set; }
+    public required long OrderTotal { get; init; }
+
+    public required List<OrderItemDto> Items { get; init; }
 }

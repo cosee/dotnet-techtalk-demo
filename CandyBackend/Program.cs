@@ -1,4 +1,4 @@
-using System.Diagnostics.CodeAnalysis;
+using System.Text.Json.Serialization;
 using CandyBackend.Api;
 using CandyBackend.Core;
 using CandyBackend.Repository;
@@ -7,24 +7,17 @@ using CandyBackend.Repository.Orders;
 using EfSchemaCompare;
 using Microsoft.EntityFrameworkCore;
 using Npgsql;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
 using Serilog;
-using Serilog.Events;
 using ILogger = Microsoft.Extensions.Logging.ILogger;
-// ReSharper disable InvertIf
 
 namespace CandyBackend;
 
-// ReSharper disable once ClassNeverInstantiated.Global
-[SuppressMessage("Usage", "CA2254:Template should be a static expression")]
 public class Program
 {
     public static void Main(string[] args)
     {
-        Log.Logger = new LoggerConfiguration()
-            .WriteTo.Console()
-            .MinimumLevel.Override("Microsoft.AspNetCore", LogEventLevel.Warning)
-            .CreateLogger();
-
         var builder = WebApplication.CreateBuilder(args);
         var connectionString = builder.Configuration.GetConnectionString("CandyDatabase");
 
@@ -33,11 +26,23 @@ public class Program
             throw new Exception("ConnectionString 'CandyDatabase' is missing.");
         }
 
-        builder.Host.UseSerilog();
+        builder.Host.UseSerilog((hostingContext, loggerConfiguration) =>
+            loggerConfiguration.ReadFrom.Configuration(hostingContext.Configuration));
 
         var services = builder.Services;
 
-        AutomapperConfiguration.Configure(services);
+        services.ConfigureAutoMapper();
+
+        var otel = services.AddOpenTelemetry();
+        // Configure OpenTelemetry Resources with the application name
+        otel.ConfigureResource(resourceBuilder => resourceBuilder.AddService(serviceName: builder.Environment.ApplicationName));
+        // Add Metrics for ASP.NET Core and our custom metrics and export to Prometheus
+        otel.WithMetrics(metrics => metrics
+            .AddAspNetCoreInstrumentation()
+            .AddMeter("Microsoft.AspNetCore.Hosting")
+            .AddMeter("Microsoft.AspNetCore.Server.Kestrel")
+            .AddPrometheusExporter());
+
 
         // Add services to the container.
         services.AddScoped<ICandyService, CandyService>();
@@ -55,11 +60,18 @@ public class Program
         services.AddHealthChecks()
             // Healthcheck for database: Microsoft.Extensions.Diagnostics.HealthChecks.EntityFrameworkCore
             .AddDbContextCheck<ApplicationContext>();
-        services.AddControllers();
+        services.AddControllers()
+            .AddJsonOptions(configure => { configure.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter()); });
 
         // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
         services.AddEndpointsApiExplorer();
-        services.AddSwaggerGen();
+        services.ConfigureSwagger();
+        services.AddAuthentication(option =>
+            {
+                option.DefaultAuthenticateScheme = "Basic";
+                option.DefaultChallengeScheme = "Basic";
+            })
+            .AddScheme<BasicAuthenticationOptions, BasicAuthenticationHandler>("Basic", _ => { });
 
         var app = builder.Build();
 
@@ -78,7 +90,10 @@ public class Program
         app.MapControllers();
 
         app.ConfigureCustomExceptionMiddleware();
-        
+
+        // Configure the Prometheus scraping endpoint
+        app.MapPrometheusScrapingEndpoint();
+
         app.Run();
     }
 
@@ -94,14 +109,14 @@ public class Program
         evolve.Migrate();
     }
 
-private static void VerifyDatabase(IServiceScope scope, ILogger appLogger)
-{
-    var applicationContext = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
-    var comparer = new CompareEfSql();
-    if (comparer.CompareEfWithDb(applicationContext))
+    private static void VerifyDatabase(IServiceScope scope, ILogger appLogger)
     {
-        appLogger.LogError(comparer.GetAllErrors);
-        throw new Exception("Database schema not matching model classes.");
+        var applicationContext = scope.ServiceProvider.GetRequiredService<ApplicationContext>();
+        var comparer = new CompareEfSql();
+        if (comparer.CompareEfWithDb(applicationContext))
+        {
+            appLogger.LogError(comparer.GetAllErrors);
+            throw new Exception("Database schema not matching model classes.");
+        }
     }
-}
 }
